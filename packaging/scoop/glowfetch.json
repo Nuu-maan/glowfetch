@@ -1,0 +1,23 @@
+{
+  "version": "0.1.0",
+  "description": "A live, animated system monitor for the Windows terminal.",
+  "homepage": "https://github.com/Nuu-maan/glowfetch",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Nuu-maan/glowfetch/releases/download/v0.1.0/glowfetch-x86_64-pc-windows-msvc.zip",
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "bin": "glowfetch.exe",
+  "checkver": {
+    "github": "https://github.com/Nuu-maan/glowfetch"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/Nuu-maan/glowfetch/releases/download/v$version/glowfetch-x86_64-pc-windows-msvc.zip"
+      }
+    }
+  }
+}
