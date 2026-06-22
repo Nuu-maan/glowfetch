@@ -4,7 +4,8 @@
 
 <p align="center">
   <a href="https://github.com/Nuu-maan/glowfetch/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Nuu-maan/glowfetch/ci.yml?style=for-the-badge&label=build&color=00aeef"></a>
-  <img alt="Rust" src="https://img.shields.io/badge/rust-1.74%2B-785aff?style=for-the-badge&logo=rust">
+  <a href="https://crates.io/crates/glowfetch"><img alt="crates.io" src="https://img.shields.io/crates/v/glowfetch?style=for-the-badge&logo=rust&color=785aff&label=crates.io"></a>
+  <a href="https://github.com/microsoft/winget-pkgs"><img alt="winget" src="https://img.shields.io/badge/winget-NuuMaan.Glowfetch-00aeef?style=for-the-badge&logo=windows"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-windows-00aeef?style=for-the-badge&logo=windows">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-f0468c?style=for-the-badge"></a>
 </p>
@@ -52,30 +53,37 @@ Press `q` or `Esc` to quit the live view.
 
 ## Installation
 
+Pick whichever package manager you already use. All methods install the same single executable.
+
+| Method | Command |
+| --- | --- |
+| Cargo | `cargo install glowfetch` |
+| winget | `winget install NuuMaan.Glowfetch` |
+| Scoop | `scoop install https://raw.githubusercontent.com/Nuu-maan/glowfetch/main/packaging/scoop/glowfetch.json` |
+| Release | Download the zip from the [latest release](https://github.com/Nuu-maan/glowfetch/releases/latest) |
+
 ### Cargo
 
 ```powershell
 cargo install glowfetch
 ```
 
-### Scoop
-
-```powershell
-scoop install https://raw.githubusercontent.com/Nuu-maan/glowfetch/main/packaging/scoop/glowfetch.json
-```
-
 ### winget
-
-Once the manifest is accepted into the community repository:
 
 ```powershell
 winget install NuuMaan.Glowfetch
 ```
 
-To install from the manifest in this repository before then:
+If the package is still in review on the community repository, install from the manifest in this repository:
 
 ```powershell
 winget install --manifest packaging/winget/manifests/n/NuuMaan/Glowfetch/0.1.0
+```
+
+### Scoop
+
+```powershell
+scoop install https://raw.githubusercontent.com/Nuu-maan/glowfetch/main/packaging/scoop/glowfetch.json
 ```
 
 ## Architecture
