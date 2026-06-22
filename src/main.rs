@@ -41,7 +41,13 @@ struct Sections {
 
 impl Default for Sections {
     fn default() -> Self {
-        Sections { cpu: true, ram: true, disk: true, net: true, palette: true }
+        Sections {
+            cpu: true,
+            ram: true,
+            disk: true,
+            net: true,
+            palette: true,
+        }
     }
 }
 
@@ -146,7 +152,11 @@ fn parse_color(s: &str) -> Option<Rgb> {
     }
     let p: Vec<&str> = s.split(',').collect();
     if p.len() == 3 {
-        return Some((p[0].trim().parse().ok()?, p[1].trim().parse().ok()?, p[2].trim().parse().ok()?));
+        return Some((
+            p[0].trim().parse().ok()?,
+            p[1].trim().parse().ok()?,
+            p[2].trim().parse().ok()?,
+        ));
     }
     None
 }
@@ -191,11 +201,20 @@ palette = true
 
 fn default_config_path() -> std::path::PathBuf {
     let base = std::env::var("APPDATA").unwrap_or_else(|_| ".".into());
-    std::path::Path::new(&base).join("glowfetch").join("glowfetch.toml")
+    std::path::Path::new(&base)
+        .join("glowfetch")
+        .join("glowfetch.toml")
 }
 
-fn build_settings(cfg: Config, theme_override: Option<String>, fancy_override: Option<bool>, logo_override: Option<bool>) -> Settings {
-    let theme_name = theme_override.or(cfg.theme).unwrap_or_else(|| "windows".into());
+fn build_settings(
+    cfg: Config,
+    theme_override: Option<String>,
+    fancy_override: Option<bool>,
+    logo_override: Option<bool>,
+) -> Settings {
+    let theme_name = theme_override
+        .or(cfg.theme)
+        .unwrap_or_else(|| "windows".into());
     let mut theme = preset(&theme_name);
     if let Some(c) = cfg.accent.as_deref().and_then(parse_color) {
         theme.accent = c;
@@ -322,16 +341,19 @@ impl App {
             .map(|c| c.brand().trim().to_string())
             .unwrap_or_else(|| "Unknown CPU".into());
 
-        let wmi = COMLibrary::new().ok().and_then(|com| WMIConnection::new(com).ok());
+        let wmi = COMLibrary::new()
+            .ok()
+            .and_then(|com| WMIConnection::new(com).ok());
 
         let (mut gpu, mut resolution) = ("Unknown".to_string(), "-".to_string());
         if let Some(conn) = &wmi {
             if let Ok(vcs) = conn.query::<VideoController>() {
                 if let Some(v) = vcs.into_iter().find(|v| v.name.is_some()) {
                     gpu = v.name.unwrap_or_else(|| "Unknown".into());
-                    if let (Some(w), Some(h)) =
-                        (v.current_horizontal_resolution, v.current_vertical_resolution)
-                    {
+                    if let (Some(w), Some(h)) = (
+                        v.current_horizontal_resolution,
+                        v.current_vertical_resolution,
+                    ) {
                         if w > 0 && h > 0 {
                             resolution = format!("{w}x{h}");
                         }
@@ -378,7 +400,7 @@ impl App {
                 best = Some((used, total));
                 break;
             }
-            if best.map_or(true, |(_, t)| total > t) {
+            if best.is_none_or(|(_, t)| total > t) {
                 best = Some((used, total));
             }
         }
@@ -408,7 +430,10 @@ impl App {
             }
         }
 
-        push(&mut self.cpu_hist, self.sys.global_cpu_usage().round() as u64);
+        push(
+            &mut self.cpu_hist,
+            self.sys.global_cpu_usage().round() as u64,
+        );
         // scale net to KB/s for the sparkline
         push(&mut self.net_hist, (self.net_down / 1000.0).round() as u64);
     }
@@ -521,12 +546,19 @@ fn main() -> io::Result<()> {
     }
 
     // Load config (explicit path, else default location), then resolve settings.
-    let path = config_path.map(std::path::PathBuf::from).unwrap_or_else(default_config_path);
+    let path = config_path
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(default_config_path);
     let cfg: Config = std::fs::read_to_string(&path)
         .ok()
         .and_then(|s| toml::from_str(&s).ok())
         .unwrap_or_default();
-    let _ = SETTINGS.set(build_settings(cfg, theme_override, fancy_override, logo_override));
+    let _ = SETTINGS.set(build_settings(
+        cfg,
+        theme_override,
+        fancy_override,
+        logo_override,
+    ));
 
     if once {
         print_once();
@@ -571,7 +603,11 @@ fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
 fn draw(f: &mut Frame, app: &App) {
     let root = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(1), Constraint::Min(0), Constraint::Length(1)])
+        .constraints([
+            Constraint::Length(1),
+            Constraint::Min(0),
+            Constraint::Length(1),
+        ])
         .split(f.area());
 
     draw_header(f, root[0]);
@@ -588,10 +624,16 @@ fn draw(f: &mut Frame, app: &App) {
 
 fn draw_header(f: &mut Frame, area: Rect) {
     let left = Line::from(vec![
-        Span::styled("  glowfetch", Style::default().fg(accent()).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "  glowfetch",
+            Style::default().fg(accent()).add_modifier(Modifier::BOLD),
+        ),
         Span::styled("  live system monitor", Style::default().fg(dim())),
     ]);
-    f.render_widget(Paragraph::new(left).style(Style::default().bg(Color::Rgb(22, 24, 31))), area);
+    f.render_widget(
+        Paragraph::new(left).style(Style::default().bg(Color::Rgb(22, 24, 31))),
+        area,
+    );
     let right = Paragraph::new(Line::from(Span::styled(
         format!("up {} ", fmt_uptime(System::uptime())),
         Style::default().fg(accent2()),
@@ -604,7 +646,13 @@ fn draw_header(f: &mut Frame, area: Rect) {
 fn draw_footer(f: &mut Frame, area: Rect) {
     let key = |k: &str, d: &str| {
         vec![
-            Span::styled(format!(" {k} "), Style::default().fg(Color::Black).bg(accent()).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                format!(" {k} "),
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(accent())
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(format!(" {d}   "), Style::default().fg(dim())),
         ]
     };
@@ -615,15 +663,25 @@ fn draw_footer(f: &mut Frame, area: Rect) {
 }
 
 fn draw_card(f: &mut Frame, full: Rect, app: &App) {
-    let logo_h = if st().show_logo { LOGO.len() as u16 + 1 } else { 0 };
+    let logo_h = if st().show_logo {
+        LOGO.len() as u16 + 1
+    } else {
+        0
+    };
     // Cap the card to its content height; leave the rest empty.
     let want = logo_h + 6 + if app.battery.is_some() { 1 } else { 0 } + 2;
-    let area = Rect { height: want.min(full.height), ..full };
+    let area = Rect {
+        height: want.min(full.height),
+        ..full
+    };
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(accent()))
-        .title(Span::styled(" system ", Style::default().fg(accent2()).add_modifier(Modifier::BOLD)));
+        .title(Span::styled(
+            " system ",
+            Style::default().fg(accent2()).add_modifier(Modifier::BOLD),
+        ));
     let inner = block.inner(area);
     f.render_widget(block, area);
 
@@ -631,7 +689,10 @@ fn draw_card(f: &mut Frame, full: Rect, app: &App) {
     let cores = app.sys.cpus().len();
     let kv = |k: &str, v: String| {
         Line::from(vec![
-            Span::styled(format!("{k:>8} ", ), Style::default().fg(accent()).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                format!("{k:>8} ",),
+                Style::default().fg(accent()).add_modifier(Modifier::BOLD),
+            ),
             Span::styled(v, Style::default().fg(white())),
         ])
     };
@@ -641,17 +702,29 @@ fn draw_card(f: &mut Frame, full: Rect, app: &App) {
     if st().show_logo {
         for (i, l) in LOGO.iter().enumerate() {
             let c = lerp(la, lb, i as f64 / LOGO.len() as f64);
-            lines.push(Line::from(Span::styled(*l, Style::default().fg(c).add_modifier(Modifier::BOLD))));
+            lines.push(Line::from(Span::styled(
+                *l,
+                Style::default().fg(c).add_modifier(Modifier::BOLD),
+            )));
         }
         lines.push(Line::from(""));
     }
     lines.push(Line::from(vec![
-        Span::styled(format!("  {user}"), Style::default().fg(accent2()).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            format!("  {user}"),
+            Style::default().fg(accent2()).add_modifier(Modifier::BOLD),
+        ),
         Span::styled("@", Style::default().fg(dim())),
-        Span::styled(app.host.clone(), Style::default().fg(accent()).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            app.host.clone(),
+            Style::default().fg(accent()).add_modifier(Modifier::BOLD),
+        ),
     ]));
     lines.push(Line::from(Span::styled(
-        format!("  {}", "─".repeat((user.len() + app.host.len() + 1).min(28))),
+        format!(
+            "  {}",
+            "─".repeat((user.len() + app.host.len() + 1).min(28))
+        ),
         Style::default().fg(dim()),
     )));
     lines.push(kv("os", app.os.clone()));
@@ -685,7 +758,8 @@ fn draw_meters(f: &mut Frame, area: Rect, app: &App) {
     if s.palette {
         kinds.push(("palette", 3));
     }
-    let mut constraints: Vec<Constraint> = kinds.iter().map(|(_, h)| Constraint::Length(*h)).collect();
+    let mut constraints: Vec<Constraint> =
+        kinds.iter().map(|(_, h)| Constraint::Length(*h)).collect();
     constraints.push(Constraint::Min(0)); // spacer
 
     let rows = Layout::default()
@@ -700,13 +774,32 @@ fn draw_meters(f: &mut Frame, area: Rect, app: &App) {
             "ram" => {
                 let total = app.sys.total_memory();
                 let used = app.sys.used_memory();
-                let ram = if total > 0 { used as f64 / total as f64 } else { 0.0 };
-                f.render_widget(gauge(title_for("RAM", "▥"), ram, format!("{:.1} / {:.1} GiB", gib(used), gib(total))), r);
+                let ram = if total > 0 {
+                    used as f64 / total as f64
+                } else {
+                    0.0
+                };
+                f.render_widget(
+                    gauge(
+                        title_for("RAM", "▥"),
+                        ram,
+                        format!("{:.1} / {:.1} GiB", gib(used), gib(total)),
+                    ),
+                    r,
+                );
             }
             "disk" => {
-                let disk = if app.disk_total > 0 { app.disk_used as f64 / app.disk_total as f64 } else { 0.0 };
+                let disk = if app.disk_total > 0 {
+                    app.disk_used as f64 / app.disk_total as f64
+                } else {
+                    0.0
+                };
                 f.render_widget(
-                    gauge(title_for("DISK", "▤"), disk, format!("{:.0} / {:.0} GiB", gib(app.disk_used), gib(app.disk_total))),
+                    gauge(
+                        title_for("DISK", "▤"),
+                        disk,
+                        format!("{:.0} / {:.0} GiB", gib(app.disk_used), gib(app.disk_total)),
+                    ),
                     r,
                 );
             }
@@ -739,7 +832,10 @@ fn titled(title: String) -> Block<'static> {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(dim()))
-        .title(Span::styled(title, Style::default().fg(accent()).add_modifier(Modifier::BOLD)))
+        .title(Span::styled(
+            title,
+            Style::default().fg(accent()).add_modifier(Modifier::BOLD),
+        ))
 }
 
 // A bar-graph built only from full blocks (█) — renders in any console font.
@@ -769,7 +865,11 @@ fn render_graph(f: &mut Frame, area: Rect, hist: &VecDeque<u64>, max: u64, by_lo
                 let color = if by_load {
                     load_color(frac)
                 } else {
-                    lerp(st().theme.accent, lerp_rgb(st().theme.accent, (255, 255, 255), 0.4), frac)
+                    lerp(
+                        st().theme.accent,
+                        lerp_rgb(st().theme.accent, (255, 255, 255), 0.4),
+                        frac,
+                    )
                 };
                 spans.push(Span::styled("█", Style::default().fg(color)));
             } else {
@@ -818,9 +918,20 @@ fn draw_net(f: &mut Frame, area: Rect, app: &App) {
         .split(inner);
 
     let label = Line::from(vec![
-        Span::styled("down ", Style::default().fg(Color::Rgb(40, 200, 120)).add_modifier(Modifier::BOLD)),
-        Span::styled(format!("{:<12}", fmt_rate(app.net_down)), Style::default().fg(white())),
-        Span::styled("up ", Style::default().fg(accent()).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "down ",
+            Style::default()
+                .fg(Color::Rgb(40, 200, 120))
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            format!("{:<12}", fmt_rate(app.net_down)),
+            Style::default().fg(white()),
+        ),
+        Span::styled(
+            "up ",
+            Style::default().fg(accent()).add_modifier(Modifier::BOLD),
+        ),
         Span::styled(fmt_rate(app.net_up), Style::default().fg(white())),
     ]);
     f.render_widget(Paragraph::new(label), parts[0]);
@@ -840,7 +951,11 @@ fn draw_palette(f: &mut Frame, area: Rect) {
         (0..width)
             .map(|i| {
                 let t = i as f64 / width as f64;
-                let c = if t < 0.5 { lerp(a, b, t / 0.5) } else { lerp(b, c2, (t - 0.5) / 0.5) };
+                let c = if t < 0.5 {
+                    lerp(a, b, t / 0.5)
+                } else {
+                    lerp(b, c2, (t - 0.5) / 0.5)
+                };
                 Span::styled("█", Style::default().fg(c))
             })
             .collect::<Vec<_>>(),
@@ -867,10 +982,16 @@ fn print_once() {
     let used = app.sys.used_memory();
 
     let user = std::env::var("USERNAME").unwrap_or_else(|_| "user".into());
-    let kv = |k: &str, v: String| format!("{}{}", ansi(a, true, &format!("{k}: ")), ansi(w, false, &v));
+    let kv =
+        |k: &str, v: String| format!("{}{}", ansi(a, true, &format!("{k}: ")), ansi(w, false, &v));
 
     let mut info = vec![
-        format!("{}{}{}", ansi(a2, true, &user), ansi(d, false, "@"), ansi(a, true, &app.host)),
+        format!(
+            "{}{}{}",
+            ansi(a2, true, &user),
+            ansi(d, false, "@"),
+            ansi(a, true, &app.host)
+        ),
         ansi(d, false, &"─".repeat(user.len() + app.host.len() + 1)),
         kv("OS", app.os.clone()),
         kv("Kernel", app.kernel.clone()),
@@ -878,8 +999,14 @@ fn print_once() {
         kv("GPU", app.gpu.clone()),
         kv("Display", format!("{} ({})", app.resolution, app.arch)),
         kv("Uptime", fmt_uptime(System::uptime())),
-        kv("Memory", format!("{:.1} / {:.1} GiB", gib(used), gib(total))),
-        kv("Disk", format!("{:.0} / {:.0} GiB", gib(app.disk_used), gib(app.disk_total))),
+        kv(
+            "Memory",
+            format!("{:.1} / {:.1} GiB", gib(used), gib(total)),
+        ),
+        kv(
+            "Disk",
+            format!("{:.0} / {:.0} GiB", gib(app.disk_used), gib(app.disk_total)),
+        ),
         kv("Terminal", terminal_name()),
     ];
     if let Some(b) = app.battery {
@@ -887,8 +1014,14 @@ fn print_once() {
     }
     info.push(String::new());
     let blocks: String = [
-        (0u8, 0, 0), (205, 49, 49), (13, 188, 121), (229, 229, 16),
-        (36, 114, 200), (188, 63, 188), (17, 168, 205), (200, 200, 200),
+        (0u8, 0, 0),
+        (205, 49, 49),
+        (13, 188, 121),
+        (229, 229, 16),
+        (36, 114, 200),
+        (188, 63, 188),
+        (17, 168, 205),
+        (200, 200, 200),
     ]
     .iter()
     .map(|c| ansi(*c, false, "███"))
@@ -900,7 +1033,11 @@ fn print_once() {
         let rows = LOGO.len().max(info.len());
         for i in 0..rows {
             let logo_line = LOGO.get(i).copied().unwrap_or("");
-            let lc = lerp_rgb(st().theme.logo_a, st().theme.logo_b, i as f64 / LOGO.len().max(1) as f64);
+            let lc = lerp_rgb(
+                st().theme.logo_a,
+                st().theme.logo_b,
+                i as f64 / LOGO.len().max(1) as f64,
+            );
             let left = ansi(lc, true, &format!("{logo_line:<27}"));
             let right = info.get(i).cloned().unwrap_or_default();
             println!("{left}  {right}");
