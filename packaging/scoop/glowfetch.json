@@ -6,7 +6,7 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/Nuu-maan/glowfetch/releases/download/v0.1.0/glowfetch-x86_64-pc-windows-msvc.zip",
-      "hash": "0000000000000000000000000000000000000000000000000000000000000000"
+      "hash": "01f69bb1c0dec192196280c7eb6bdaa5c601735346a3db51602e4c9e41b72f17"
     }
   },
   "bin": "glowfetch.exe",
