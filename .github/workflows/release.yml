@@ -1,0 +1,26 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build release
+        run: cargo build --release
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "glowfetch-x86_64-pc-windows-msvc"
+          Compress-Archive -Path target/release/glowfetch.exe -DestinationPath "$name.zip"
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: glowfetch-x86_64-pc-windows-msvc.zip
