@@ -1,0 +1,13 @@
+# glowfetch configuration
+theme = "windows"        # windows | matrix | dracula | nord | amber
+# accent  = "#00AEEF"     # override theme accent (hex or "r,g,b")
+# accent2 = "#785AFF"
+show_logo = true
+fancy = "auto"           # auto (Windows Terminal) | on | off
+
+[sections]
+cpu = true
+ram = true
+disk = true
+net = true
+palette = true
