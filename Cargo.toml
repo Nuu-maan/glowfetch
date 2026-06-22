@@ -1,0 +1,26 @@
+[package]
+name = "glowfetch"
+version = "0.1.0"
+edition = "2021"
+description = "A live-updating system info TUI for Windows — neofetch, but it breathes."
+authors = ["Numan Khan <n82238895@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/nuu-maan/glowfetch"
+homepage = "https://github.com/nuu-maan/glowfetch"
+keywords = ["neofetch", "tui", "system-info", "monitor", "windows"]
+categories = ["command-line-utilities"]
+exclude = ["docs/*", ".github/*"]
+
+[dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
+sysinfo = "0.33"
+wmi = "0.14"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
