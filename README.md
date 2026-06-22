@@ -64,6 +64,20 @@ cargo install glowfetch
 scoop install https://raw.githubusercontent.com/Nuu-maan/glowfetch/main/packaging/scoop/glowfetch.json
 ```
 
+### winget
+
+Once the manifest is accepted into the community repository:
+
+```powershell
+winget install NuuMaan.Glowfetch
+```
+
+To install from the manifest in this repository before then:
+
+```powershell
+winget install --manifest packaging/winget/manifests/n/NuuMaan/Glowfetch/0.1.0
+```
+
 ## Architecture
 
 ```mermaid
